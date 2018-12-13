@@ -7,7 +7,7 @@ import (
 )
 
 func (rd *RedisDB) Put(ctx context.Context, asset Asset) (interface{}, error) {
-	c := rd.redisPool.Get()
+	c := rd.GetConn()
 	defer c.Close()
 
 	structType := asset.GetStructType()
@@ -22,3 +22,9 @@ func (rd *RedisDB) Put(ctx context.Context, asset Asset) (interface{}, error) {
 	return nil, fmt.Errorf("not supported structType: %s", structType)
 }
 
+func (rd *RedisDB) Get(ctx context.Context, args ...interface{}) (interface{}, error){
+	c := rd.GetConn()
+	defer c.Close()
+
+	return c.Do("HGET", args...)
+}

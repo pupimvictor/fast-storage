@@ -10,6 +10,7 @@ import (
 type (
 	RedisDB struct {
 		redisPool *redis.Pool
+		GetConn func() (redis.Conn)
 	}
 
 	DatastoreDB struct {
@@ -59,7 +60,7 @@ func New(redisAddrs, redisPassword, db string, maxIdle, maxActive int, idleTimeo
 		return c, nil
 	}
 
-	return &DataLayer{
+	dl := &DataLayer{
 		Redis: RedisDB{
 			redisPool: &redis.Pool{
 				Dial:            dial,
@@ -72,10 +73,12 @@ func New(redisAddrs, redisPassword, db string, maxIdle, maxActive int, idleTimeo
 		DS: DatastoreDB{
 			client: client,
 		},
-	}, nil
+	}
+	dl.Redis.GetConn = dl.Redis.redisPool.Get
+	return dl, nil
 }
 
-func (dl *DataLayer) Put(ctx context.Context, asset Asset, dsParent *datastore.Key) (*datastore.Key, *string, error) {
+func (dl *DataLayer) Put(ctx context.Context, asset Asset, dsParent *datastore.Key) (*datastore.Key, interface{}, error) {
 	dsKey, err := dl.DS.Put(ctx, asset, dsParent)
 	if err != nil {
 		return nil, nil, err
