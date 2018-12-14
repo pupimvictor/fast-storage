@@ -6,25 +6,26 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-func (rd *RedisDB) Put(ctx context.Context, asset Asset) (interface{}, error) {
+func (rd *RedisDB) Put(ctx context.Context, asset RedisAsset) (interface{}, error) {
 	c := rd.GetConn()
 	defer c.Close()
 
-	structType := asset.GetStructType()
-	if structType == "HASH" {
-		reply, err := c.Do("HSET", redis.Args{asset.GetKey()}.AddFlat(asset))
-		if err != nil {
-			return nil, err
-		}
-		return reply, nil
-	}
-
-	return nil, fmt.Errorf("not supported structType: %s", structType)
+	return c.Do("HSET", redis.Args{asset.GetKey()}.AddFlat(asset)...)
 }
 
-func (rd *RedisDB) Get(ctx context.Context, args ...interface{}) (interface{}, error){
+func (rd *RedisDB) Get(ctx context.Context, asset RedisAsset, args ...interface{}) (error){
 	c := rd.GetConn()
 	defer c.Close()
 
-	return c.Do("HGET", args...)
+	args = append([]interface{}{asset.GetKey()}, args)
+
+	val, err := c.Do("HGET", asset.GetKey())
+	fmt.Printf("Val: %+v\n", val)
+	value, err := redis.Values(val, err)
+
+	err = redis.ScanStruct(value, asset)
+	if err != nil {
+		return err
+	}
+	return nil
 }

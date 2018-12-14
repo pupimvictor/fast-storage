@@ -90,3 +90,13 @@ func (dl *DataLayer) Put(ctx context.Context, asset Asset, dsParent *datastore.K
 	return dsKey, redisKey, nil
 }
 
+func (dl *DataLayer) Get(ctx context.Context, asset Asset) (error) {
+	err := dl.Redis.Get(ctx, asset, []interface{}{})
+	if err != nil {
+		if err.Error() == "not found in cache" /*todo: create error struct for this*/ {
+			return dl.DS.Get(ctx, asset)
+		}
+		return err
+	}
+	return nil
+}

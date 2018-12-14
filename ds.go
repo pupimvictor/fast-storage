@@ -5,14 +5,16 @@ import (
 	"context"
 )
 
-func (ds *DatastoreDB) Put(ctx context.Context, asset Asset, parent *datastore.Key) (*datastore.Key, error) {
+func (ds *DatastoreDB) Put(ctx context.Context, asset DSAsset, parent *datastore.Key) (*datastore.Key, error) {
+	kind := asset.GetDSKind()
+
 	var key *datastore.Key
 	if idKey, ok := asset.GetIDKey(); ok{
-		key = datastore.IDKey(asset.GetDSKind(), idKey, parent)
+		key = datastore.IDKey(kind, idKey, parent)
 	} else if nameKey, ok := asset.GetNameKey(); ok {
-		key = datastore.NameKey(asset.GetDSKind(), nameKey, parent)
+		key = datastore.NameKey(kind, nameKey, parent)
 	} else {
-		key = datastore.IncompleteKey(asset.GetDSKind(), parent)
+		key = datastore.IncompleteKey(kind, parent)
 	}
 	key.Namespace = asset.GetDSNamespace()
 
@@ -23,3 +25,6 @@ func (ds *DatastoreDB) Put(ctx context.Context, asset Asset, parent *datastore.K
 	return key, nil
 }
 
+func (ds *DatastoreDB) Get(ctx context.Context, asset DSAsset) (error) {
+	return nil
+}
