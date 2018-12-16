@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 )
 
 func TestGet(t *testing.T){
@@ -16,7 +15,7 @@ func TestGet(t *testing.T){
 		t.Fail()
 	}
 
-	mockedConnFn, _ := getMockedConn(TestAsset{Id: "asset:1", Val: "asset1"}, "HGET", "asset:1")
+	mockedConnFn, _ := getMockedConn(TestAsset{Id: "asset:1", Val1: "asset1"}, "HGET", "asset:1")
 	dl.Redis.GetConn = mockedConnFn
 
 	ctx := context.Background()
@@ -31,8 +30,8 @@ func TestGet(t *testing.T){
 
 	fmt.Printf("reply: %+v\n", asset)
 
-	if asset.Val != "asset1" {
-		fmt.Printf("expect 'Val: asset1' got %+v\n", asset)
+	if asset.Val1 != "asset1" {
+		fmt.Printf("expect 'Val1: asset1' got %+v\n", asset)
 		t.Fail()
 	}
 }
@@ -53,40 +52,5 @@ func newTestDB() (*DataLayer, error) {
 		},
 	}, nil
 }
-
-type TestAsset struct{
-	Id  string
-	Val string
-}
-
-func (ta TestAsset) GetDSKind() string {
-	return "test-kind"
-}
-
-func (ta TestAsset) GetNameKey() (string, bool) {
-	return ta.Id, true
-}
-
-func (ta TestAsset) GetIDKey() (int64, bool) {
-	return 0, false
-}
-
-func (ta TestAsset) GetDSNamespace() string {
-	return "test-namespace"
-}
-
-func (ta TestAsset) GetKey() interface{} {
-	return ta.Id
-}
-
-func (ta TestAsset) GetTTL() time.Duration {
-	return 1 * time.Hour
-}
-
-func (ta TestAsset) GetStructType() string {
-	return "HASH"
-}
-
-
 
 

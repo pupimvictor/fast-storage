@@ -9,7 +9,7 @@ import (
 func (rd *RedisDB) Put(ctx context.Context, asset RedisAsset) (interface{}, error) {
 	c := rd.GetConn()
 	defer c.Close()
-
+	fmt.Println("new conn")
 	return c.Do("HSET", redis.Args{asset.GetKey()}.AddFlat(asset)...)
 }
 
@@ -20,7 +20,7 @@ func (rd *RedisDB) Get(ctx context.Context, asset RedisAsset, args ...interface{
 	args = append([]interface{}{asset.GetKey()}, args)
 
 	val, err := c.Do("HGET", asset.GetKey())
-	fmt.Printf("Val: %+v\n", val)
+	fmt.Printf("Val1: %+v\n", val)
 	value, err := redis.Values(val, err)
 
 	err = redis.ScanStruct(value, asset)

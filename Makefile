@@ -1,18 +1,33 @@
+.PHONY: install build pack run stop dkr-run-redis
 
+TAG?=$(shell date +%s)
 
-build :
-		CGO_ENABLED=0 GOOS=linux go1.11 build -a -installsuffix cgo -o fast-storage cmd
+export TAG
 
-docker-build :
-		docker build -t fast-storage .
+install:
+		echo $(TAG)
 
-docker-run :
-		docker run --name fast-storage --link some-redis:redis -d fast-storage
-		docker logs fast-storage
+build:  install
+		GOOS=linux /usr/local/go1.11/bin/go build -ldflags="-s -w -X main.version=$(TAG)" -o ./cmd/fast-storage ./cmd/
 
-docker-stop:
+pack:   build
+		docker build -t fast-storage:$(TAG) .
+		docker tag fast-storage:$(TAG) fast-storage:latest
+
+run:
+		docker run --name fast-storage-$(TAG)  --link some-redis:redis --rm redis sh -c 'exec redis-cli -h "$$REDIS_PORT_6379_TCP_ADDR" -p "$$REDIS_PORT_6379_TCP_PORT"' -d fast-storage:latest
+		docker run fast-storage-$(TAG)
+		docker ps
+		docker logs fast-storage-$(TAG)
+
+test:   pack run
+
+stop:
 		docker stop fast-storage
 		docker rm fast-storage
 
-docker-run-redis:
-		docker run --name some-redis -d redis
+dkr-run-redis:
+	docker run --name some-redis -d redis
+
+
+ship: build
