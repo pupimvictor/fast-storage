@@ -37,6 +37,6 @@ func main() {
 
 	fmt.Printf("redis reply: %+v\n", tsReply)
 
-	time.Sleep(2 * time.Minute)
+	time.Sleep(2 * time.Second)
 	fmt.Println("goobye")
 }

@@ -33,7 +33,6 @@ type (
 	RedisAsset interface {
 		GetKey() interface{}
 		GetTTL() time.Duration
-		GetStructType() string
 	}
 
 	Asset interface {
@@ -154,8 +153,5 @@ func (ta TestAsset) GetTTL() time.Duration {
 	return 1 * time.Hour
 }
 
-func (ta TestAsset) GetStructType() string {
-	return "HASH"
-}
 
 
