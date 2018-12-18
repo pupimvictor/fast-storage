@@ -15,12 +15,12 @@ func TestRedisDB_Get(t *testing.T){
 		},
 	}
 
-	mockedConnFn, _ := getMockedConn(&TestAsset{Id: "asset:1", Val1: "asset1", Val2:[]string{"a", "b"}}, "HGET", "asset:1")
+	mockedConnFn, _ := getMockedConn(&TestAsset{Id: "asset:1", Val1: "asset1", Val2:[]string{"a", "b"}}, "HMGET", "asset:1")
 	dl.Redis.GetConn = mockedConnFn
 
 	ctx := context.Background()
 	asset := TestAsset{Id: "asset:1"}
-	err := dl.Redis.Get(ctx, &asset, []interface{}{})
+	err := dl.Redis.Get(ctx, &asset, nil)
 
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
