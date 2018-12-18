@@ -103,7 +103,7 @@ Lookup in Redis db for the asset Id, in case of cahce miss, try to get it from D
 If asset is present in Datastore it will put it back in Redis and return the asset found in Datastore
  */
 func (dl *DataLayer) Get(ctx context.Context, asset Asset) (error) {
-	err := dl.Redis.Get(ctx, asset, []interface{}{})
+	err := dl.Redis.Get(ctx, asset)
 	if err != nil {
 		if err.Error() == "not found in cache" /*todo: create error struct for this*/ {
 			err = dl.DS.Get(ctx, asset)

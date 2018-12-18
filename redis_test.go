@@ -15,19 +15,22 @@ func TestRedisDB_Get(t *testing.T){
 		},
 	}
 
-	mockedConnFn, _ := getMockedConn(&TestAsset{Id: "asset:1", Val1: "asset1", Val2:[]string{"a", "b"}}, "HMGET", "asset:1")
+	mockedConnFn, cmd := getMockedConn(&TestAsset{Id: "asset:1", Val1: "asset1", Val2:[]string{"a", "b"}}, "HMGET", "asset:1", "TestAsset.Val1", "TestAsset.Val2")
 	dl.Redis.GetConn = mockedConnFn
 
 	ctx := context.Background()
 	asset := TestAsset{Id: "asset:1"}
-	err := dl.Redis.Get(ctx, &asset, nil)
+	err := dl.Redis.Get(ctx, &asset)
 
 	if err != nil {
 		fmt.Printf("err: %v\n", err)
 		t.Fail()
 	}
 
-	fmt.Printf("reply: %+v\n", asset)
+	ccc := mockedConnFn().(*redigomock.Conn)
+	fmt.Printf("stats %d\n", ccc.Stats(cmd))
+
+	fmt.Printf("test reply: %+v\n", asset)
 
 	if asset.Val1 != "asset1" {
 		fmt.Printf("expect 'Val1: asset1' got %+v\n", asset)
@@ -40,14 +43,12 @@ Mocked Conn apply the expected reply to the redis conn and returns it to be used
  */
 func getMockedConn(expectResp RedisAsset, redisCmd string, args ...interface{}) (func() (redis.Conn), *redigomock.Cmd){
 	mockedConn := redigomock.NewConn()
-	cmd := mockedConn.Command(redisCmd, args...).Expect(redis.Args{}.AddFlat(expectResp))
 
-	var connInterface interface{}
-	connInterface = mockedConn
-	conn := connInterface.(redis.Conn)
+	fmt.Printf("cmd args: rediscmd %s, args: %s, expected: %+v\n", redisCmd, args, redis.Args{}.AddFlat(expectResp))
+	cmd := mockedConn.Command(redisCmd, args).Expect(redis.Args{}.AddFlat(expectResp))
 
 	getConnFn := func() (redis.Conn) {
-		return conn
+		return mockedConn
 	}
 	return getConnFn, cmd
 }
