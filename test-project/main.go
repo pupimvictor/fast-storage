@@ -16,7 +16,7 @@ func main() {
 		Val2: []string{"val2.a", "val2.b"},
 	}
 
-	dl, err := faststorage.New("redis-14804.c10.us-east-1-2.ec2.cloud.redislabs.com:14804", "lT93etfPybYMoSnBfX71vUcDjadxbol3", "0", 10, 10,  1 * time.Second,  1 * time.Second, false, nil)
+	dl, err := faststorage.New("redis-14804.c10.us-east-1-2.ec2.cloud.redislabs.com:14804", "lT93etfPybYMoSnBfX71vUcD", "0", 10, 10,  1 * time.Second,  1 * time.Second, false, nil, nil)
 	if err != nil {
 		panic(err)
 	}

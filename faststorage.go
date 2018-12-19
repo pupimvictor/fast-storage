@@ -33,6 +33,7 @@ type (
 	RedisAsset interface {
 		GetKey() interface{}
 		GetTTL() time.Duration
+		GetField() string
 	}
 
 	Asset interface {
@@ -41,10 +42,9 @@ type (
 	}
 )
 
-func New(redisAddrs, redisPassword, db string, maxIdle, maxActive int, idleTimeout, maxConnLifetime time.Duration, wait bool, client *datastore.Client) (*DataLayer, error) {
+func New(redisAddrs, redisPassword, db string, maxIdle, maxActive int, idleTimeout, maxConnLifetime time.Duration, wait bool, testOnBorrow func(c redis.Conn, t time.Time) (error), client *datastore.Client) (*DataLayer, error) {
 	dial := func() (redis.Conn, error) {
 		c, err := redis.Dial("tcp", redisAddrs)
-		defer c.Close()
 
 		fmt.Println("new conn!")
 		if err != nil {
@@ -70,10 +70,7 @@ func New(redisAddrs, redisPassword, db string, maxIdle, maxActive int, idleTimeo
 				IdleTimeout:     idleTimeout,
 				MaxIdle:         maxIdle,
 				Wait:            wait,
-				TestOnBorrow: func(c redis.Conn, t time.Time) error {
-					_, err := c.Do("PING")
-					return err
-				},
+				TestOnBorrow:    testOnBorrow,
 			}},
 		DS: DatastoreDB{
 			client: client,
@@ -147,6 +144,10 @@ func (ta TestAsset) GetDSNamespace() string {
 
 func (ta TestAsset) GetKey() interface{} {
 	return ta.Id
+}
+
+func (ta TestAsset) GetField() string {
+	return "test"
 }
 
 func (ta TestAsset) GetTTL() time.Duration {

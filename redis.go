@@ -2,53 +2,47 @@ package faststorage
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"github.com/gomodule/redigo/redis"
-	"github.com/rafaeljusto/redigomock"
-	"reflect"
-	"strings"
 )
 
 func (rd *RedisDB) Put(ctx context.Context, asset RedisAsset) (interface{}, error) {
+	payload, err := json.Marshal(asset)
+	if err != nil {
+		return nil, err
+	}
+	if asset.GetField() == "" {
+		return nil, fmt.Errorf("cannot use empty string as redis field - asset key: %s", asset.GetKey())
+	}
 	c := rd.GetConn()
 	defer c.Close()
-
-	return c.Do("HMSET", redis.Args{asset.GetKey()}.AddFlat(asset)...)}
-
-func (rd *RedisDB) Get(ctx context.Context, asset RedisAsset) (error){
-	fields, err := scanAssetSctruct(asset)
-	if err != nil {
-		return err
-	}
-	args := append([]interface{}{asset.GetKey()}, strings.Join(fields, " "))
-
-	fmt.Printf("get args %+v\n", args)
-
-	c := rd.GetConn()
-	defer c.Close()
-
-	ci := c.(*redigomock.Conn)
-
-	val, err := ci.Do("HMGET", args)
-
-	fmt.Printf("reply: %+v\n", val)
-
-	value, err := redis.Values(val, err)
-	err = redis.ScanStruct(value, asset)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.Do("HSET", asset.GetKey(), asset.GetField(), payload)
 }
 
-func scanAssetSctruct(asset RedisAsset) ([]string, error){
-	var fields []string
-	t := reflect.TypeOf(asset).Elem()
-	for i := 0; i < t.NumField() ; i++ {
-		tag := t.FieldByIndex([]int{i}).Tag.Get("redis")
-		if tag != "-" {
-			fields = append(fields, tag)
-		}
+func (rd *RedisDB) Get(ctx context.Context, asset RedisAsset) (error){
+	c := rd.GetConn()
+
+	var reply interface{}
+	var err error
+	if asset.GetField() != "" {
+		reply, err = c.Do("HGET", asset.GetKey(), asset.GetField())
+	} else {
+		reply, err = c.Do("HGETALL", asset.GetKey())
 	}
-	return fields, nil
+	c.Close()
+	if err != nil {
+		return err
+	}
+	var b []byte
+	if v, ok := reply.([]interface{}); ok {
+		for _, val := range v {
+			r := val.([]byte)
+			b = append(b, r...)
+		}
+	} else {
+		b = reply.([]byte)
+	}
+	json.Unmarshal(b, asset)
+
+	return nil
 }
