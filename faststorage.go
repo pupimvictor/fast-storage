@@ -179,11 +179,11 @@ func (ta TestAsset) GetDSKind() string {
 	return "test-kind"
 }
 
-func (ta TestAsset) GetNameKey() (string, bool) {
+func (ta TestAsset) GetDSNameKey() (string, bool) {
 	return ta.Id, true
 }
 
-func (ta TestAsset) GetIDKey() (int64, bool) {
+func (ta TestAsset) GetDSIDKey() (int64, bool) {
 	return 0, false
 }
 
@@ -191,11 +191,11 @@ func (ta TestAsset) GetDSNamespace() string {
 	return "test-namespace"
 }
 
-func (ta TestAsset) GetKey() interface{} {
+func (ta TestAsset) GetRedisKey() interface{} {
 	return ta.Id
 }
 
-func (ta TestAsset) GetField() string {
+func (ta TestAsset) GetRedisField() string {
 	return "test2"
 }
 
